@@ -16,4 +16,17 @@ This is a customisable URL shortener for PHP. You can install it to the root of 
 
 ## Usage
 
-Please see shorten.php
+Please see shorten.php for detailed usage.
+
+### Options
+
+Here are the options you can set:
+
+```php
+    'urlprefix' => 'zz', //URL prefix as defined in .htaccess, ie the url will be like http://mysite/zzba etc
+    'blacklist' => array(), //array of strings containing regex patterns
+    'whitelist' => array('.*'), //allow all urls by default
+    'db' => 'sqlite:urls.db', //custom database connection
+    'dbuser' => null, //db username: used if you were to connect to something other than sqlite
+    'dbpw' => null, //db password: as above
+```
