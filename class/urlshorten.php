@@ -12,7 +12,7 @@ class URLShorten
         (
             'urlprefix' => '',
             'blacklist' => array(),
-            'whitelist' => array('.*'),
+            'whitelist' => array('.*'), //allow all by default
             'db' => 'sqlite:urls.db',
             'dbuser' => null,
             'dbpw' => null,
@@ -21,26 +21,7 @@ class URLShorten
         $this->connectDB();
     }
 
-    function connectDB()
-    {
-        $this->db = new PDO
-        (
-            $this->options[db],
-            $this->options[dbuser],
-            $this->options[dbpw]
-        );
-
-        $this->db->exec
-        (
-            "CREATE TABLE IF NOT EXISTS shorturls
-            (
-                id INTEGER PRIMARY KEY,
-                url TEXT
-            )"
-        );
-    }
-
-
+    //Store a URL in the database
     function store($url)
     {
         $sql = $this->db->prepare
@@ -53,10 +34,12 @@ class URLShorten
         $results = $sql->fetch(PDO::FETCH_ASSOC);
         if ($results)
         {
+            //If the url exists return the existing short url
             return  $this->getShortURL($results['id']);
         }
         else
         {
+            //Insert the new record and generate url from the automatic ID
             if ($this->checkURL($url))
             {
                 $sql = $this->db->prepare
@@ -65,8 +48,11 @@ class URLShorten
                 );
                 $sql->bindValue(1, $url);
                 $sql->execute();
+
+                //Return the ShortURL to the browser
                 return $this->getShortURL($this->db->lastInsertId());
             }
+            //If the URL is not allowed to be stored return a 403 page
             else
             {
                 header("HTTP/1.0 403 Forbidden");
@@ -75,6 +61,7 @@ class URLShorten
         }
     }
 
+    //Check the blacklist and whitelist to see if the URL is allowed
     function checkURL($url)
     {
         foreach ($this->options['blacklist'] as $item)
@@ -92,10 +79,13 @@ class URLShorten
         return false;
     }
 
+    //Redirect to the full url
     function forward($id)
     {
+        //Convert the ID to a number
         $id = $this->baseToId($id);
 
+        //Get the record from the database
         $sql = $this->db->prepare
         (
             "SELECT * FROM shorturls WHERE id=?"
@@ -106,21 +96,44 @@ class URLShorten
         $results = $sql->fetch(PDO::FETCH_ASSOC);
         if ($results)
         {
+            //Redirect the browser
             header('Location: '.$results['url']);
             echo('You are being redirected to: '.$results['url']);
         }
         else
         {
+            //If the record wasnt found return a 404
             header("HTTP/1.0 404 Not Found");
             echo("The requested URL was not found.");
         }
-
-        //return 'http://humanservices.gov.au';
     }
 
+    //Connect to the database
+    private function connectDB()
+    {
+        $this->db = new PDO
+        (
+            $this->options['db'],
+            $this->options['dbuser'],
+            $this->options['dbpw']
+        );
+
+        //Create the url table if it doesnt exist
+        $this->db->exec //SQLite
+        (
+            "CREATE TABLE IF NOT EXISTS shorturls
+            (
+                id INTEGER PRIMARY KEY,
+                url TEXT
+            )"
+        );
+    }
+
+    //Return a full short URL
     private function getShortURL($num)
     {
-        $path = "http://" . $_SERVER['SERVER_NAME'] . str_replace(realpath($_SERVER['DOCUMENT_ROOT']), "", getcwd());
+        $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ? "https://" : "http://";
+        $path = $protocol . $_SERVER['SERVER_NAME'] . str_replace(realpath($_SERVER['DOCUMENT_ROOT']), "", getcwd());
         $path = str_replace("\\", "/", $path);
         return $path . "/" . $this->options['urlprefix'] . $this->idToBase($num);
     }
@@ -139,7 +152,7 @@ class URLShorten
         $remain = $id % strlen($this->alphabet);
 
         //If the number is more than the base length, call this function on the iterations left
-        if (iters > 0)
+        if ($iters > 0)
            $str .= toBase($iters);
 
         //Store the symbol based on the remainder
