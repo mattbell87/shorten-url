@@ -1,0 +1,10 @@
+# URL Shortener Rewrite Rules
+# ---------------------------
+
+# Turn on the RewriteEngine if it isn't already
+RewriteEngine   On
+
+# Specify what a short URL should start with (defaults is zz)
+RewriteRule     ^zz(.*)$    shorten.php?id=$1
+
+# 
