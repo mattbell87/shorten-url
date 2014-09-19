@@ -153,7 +153,7 @@ class URLShorten
 
         //If the number is more than the base length, call this function on the iterations left
         if ($iters > 0)
-           $str .= toBase($iters);
+           $str .= $this->idToBase($iters);
 
         //Store the symbol based on the remainder
         $str .= $this->alphabet[$remain];
