@@ -55,7 +55,7 @@ class URLShorten
             //If the URL is not allowed to be stored return a 403 page
             else
             {
-                header("HTTP/1.0 403 Forbidden");
+                header("HTTP/1.1 403 Forbidden");
                 echo("The requested URL cannot be stored.");
             }
         }
@@ -97,13 +97,14 @@ class URLShorten
         if ($results)
         {
             //Redirect the browser
+            header("HTTP/1.1 302 Moved Temporarily");
             header('Location: '.$results['url']);
             echo('You are being redirected to: '.$results['url']);
         }
         else
         {
             //If the record wasnt found return a 404
-            header("HTTP/1.0 404 Not Found");
+            header("HTTP/1.1 404 Not Found");
             echo("The requested URL was not found.");
         }
     }
